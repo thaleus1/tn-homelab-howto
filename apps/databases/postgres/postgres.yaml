@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: postgres
+  labels:
+    name: postgres
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-ha
+  namespace: postgres
+spec:
+  instances: 2
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.4
+
+  # Dedicated Longhorn storage for tables and write-ahead logs (WAL)
+  storage:
+    storageClass: longhorn
+    size: 20Gi
+
+  # Bootstrap database and owner
+  bootstrap:
+    initdb:
+      database: appdb
+      owner: appuser
+
+  # Ensure instances land on separate physical worker nodes
+  affinity:
+    enablePodAntiAffinity: true
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: worker
+            operator: In
+            values:
+            - "true"
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  monitoring:
+    enablePodMonitor: true

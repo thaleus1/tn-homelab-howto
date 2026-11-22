@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lidarr
+  labels:
+    name: lidarr
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lidarr
+  namespace: lidarr
+  labels:
+    app: lidarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: lidarr
+  template:
+    metadata:
+      labels:
+        app: lidarr
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        worker: "true"
+      containers:
+        - name: lidarr
+          image: lscr.io/linuxserver/lidarr:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8686
+              name: http
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /downloads
+              name: downloads
+            - mountPath: /media/music
+              name: music
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: lidarr-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: media-downloads-pvc
+        - name: music
+          persistentVolumeClaim:
+            claimName: media-music-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lidarr-web
+  namespace: lidarr
+spec:
+  ports:
+    - name: http
+      port: 8686
+      targetPort: 8686
+  selector:
+    app: lidarr
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: lidarr
+  namespace: lidarr
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`lidarr.yourdomain.com`) && PathPrefix(`/api`)
+      priority: 20
+      services:
+        - name: lidarr-web
+          port: 8686
+    - kind: Rule
+      match: Host(`lidarr.yourdomain.com`)
+      priority: 10
+      middlewares:
+        - name: authentik-authentik@kubernetescrd
+      services:
+        - name: lidarr-web
+          port: 8686
+  tls:
+    secretName: wildcard-tls

@@ -1,0 +1,117 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: plex
+  labels:
+    name: plex
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: plex-high
+value: 1000000
+globalDefault: false
+description: "High priority for streaming media server pods to prevent preemption."
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: plex
+  labels:
+    app: plex
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      priorityClassName: plex-high
+      automountServiceAccountToken: false
+      nodeSelector:
+        worker: "true"
+        plex: "true"
+      containers:
+        - name: plex
+          image: plexinc/pms-docker:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              gpu.intel.com/i915: "1" # Intel QuickSync hardware transcoding device
+              cpu: 1000m
+              memory: 4Gi
+            limits:
+              gpu.intel.com/i915: "1"
+              cpu: 4000m
+              memory: 8Gi
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: America/New_York
+            - name: VERSION
+              value: docker
+            - name: ADVERTISE_IP
+              value: "https://10.90.16.62:32400/" # Set to your MetalLB LoadBalancer VIP
+            - name: PLEX_CLAIM
+              value: "" # Optional Plex claim token from https://plex.tv/claim
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /transcode
+              name: transcode
+            - mountPath: /media/movies
+              name: movies
+              readOnly: true
+            - mountPath: /media/tvshows
+              name: tvshows
+              readOnly: true
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: plex-config
+        - name: transcode
+          emptyDir:
+            medium: Memory
+            sizeLimit: 4Gi
+        - name: movies
+          persistentVolumeClaim:
+            claimName: plex-movies-pvc
+        - name: tvshows
+          persistentVolumeClaim:
+            claimName: plex-tvshows-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex
+  namespace: plex
+  labels:
+    app: plex
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 10.90.16.62 # Set to your chosen MetalLB VIP
+  externalTrafficPolicy: Local
+  ports:
+    - name: plex-tcp
+      port: 32400
+      targetPort: 32400
+      protocol: TCP
+    - name: plex-udp
+      port: 32400
+      targetPort: 32400
+      protocol: UDP
+    - name: plex-dlna
+      port: 1900
+      targetPort: 1900
+      protocol: UDP
+  selector:
+    app: plex

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Homelab Portal</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e1e2f 0%, #11111b 100%);
+            min-height: 100vh;
+            color: #cdd6f4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+        }
+        .container {
+            background: #181825;
+            border: 1px solid #313244;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 25px 70px rgba(0,0,0,0.5);
+        }
+        h1 { color: #cba6f7; margin-bottom: 10px; font-size: 32px; font-weight: 700; }
+        .subtitle { color: #a6adc8; margin-bottom: 30px; font-size: 16px; }
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .app-card {
+            background: #1e1e2e;
+            border: 1px solid #313244;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.25s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+        .app-card:hover {
+            transform: translateY(-4px);
+            border-color: #cba6f7;
+            box-shadow: 0 10px 25px rgba(203, 166, 247, 0.15);
+            background: #232338;
+        }
+        .app-name { color: #ffffff; font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+        .app-desc { color: #bac2de; font-size: 13px; }
+        .section-title {
+            color: #89b4fa;
+            font-size: 20px;
+            margin: 30px 0 15px 0;
+            font-weight: 600;
+            border-bottom: 1px solid #313244;
+            padding-bottom: 8px;
+        }
+        .info-box {
+            background: #11111b;
+            border-left: 4px solid #cba6f7;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+        .info-box p { color: #a6adc8; line-height: 1.6; margin-bottom: 6px; }
+        .info-box code { background: #313244; color: #f5c2e7; padding: 2px 8px; border-radius: 4px; font-size: 14px; }
+        @media (max-width: 600px) {
+            .container { padding: 25px; }
+            h1 { font-size: 24px; }
+            .apps-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Enterprise Homelab Portal</h1>
+        <p class="subtitle">Unified Zero-Trust Portal powered by Authentik SSO & Traefik</p>
+        
+        <h2 class="section-title">Media & Streaming</h2>
+        <div class="apps-grid">
+            <a href="https://plex.yourdomain.com" class="app-card">
+                <div class="app-name">Plex</div>
+                <div class="app-desc">Media Streaming</div>
+            </a>
+            <a href="https://jellyfin.yourdomain.com" class="app-card">
+                <div class="app-name">Jellyfin</div>
+                <div class="app-desc">Open Source Streaming</div>
+            </a>
+            <a href="https://sonarr.yourdomain.com" class="app-card">
+                <div class="app-name">Sonarr</div>
+                <div class="app-desc">TV Series Management</div>
+            </a>
+            <a href="https://radarr.yourdomain.com" class="app-card">
+                <div class="app-name">Radarr</div>
+                <div class="app-desc">Movie Management</div>
+            </a>
+            <a href="https://lidarr.yourdomain.com" class="app-card">
+                <div class="app-name">Lidarr</div>
+                <div class="app-desc">Music Management</div>
+            </a>
+            <a href="https://bazarr.yourdomain.com" class="app-card">
+                <div class="app-name">Bazarr</div>
+                <div class="app-desc">Subtitle Management</div>
+            </a>
+        </div>
+
+        <h2 class="section-title">Downloads & Indexers</h2>
+        <div class="apps-grid">
+            <a href="https://prowlarr.yourdomain.com" class="app-card">
+                <div class="app-name">Prowlarr</div>
+                <div class="app-desc">Indexer Manager</div>
+            </a>
+            <a href="https://qbittorrent.yourdomain.com" class="app-card">
+                <div class="app-name">qBittorrent</div>
+                <div class="app-desc">VPN-Routed BitTorrent</div>
+            </a>
+            <a href="https://sabnzbd.yourdomain.com" class="app-card">
+                <div class="app-name">SABnzbd</div>
+                <div class="app-desc">Usenet Downloader</div>
+            </a>
+        </div>
+
+        <h2 class="section-title">Productivity & Utilities</h2>
+        <div class="apps-grid">
+            <a href="https://hass.yourdomain.com" class="app-card">
+                <div class="app-name">Home Assistant</div>
+                <div class="app-desc">Home Automation</div>
+            </a>
+            <a href="https://status.yourdomain.com" class="app-card">
+                <div class="app-name">Uptime Kuma</div>
+                <div class="app-desc">Service Status & Alerts</div>
+            </a>
+            <a href="https://gitlab.yourdomain.com" class="app-card">
+                <div class="app-name">GitLab CE</div>
+                <div class="app-desc">Git Repository & CI/CD</div>
+            </a>
+            <a href="https://files.yourdomain.com" class="app-card">
+                <div class="app-name">OwnCloud</div>
+                <div class="app-desc">Private Cloud Storage</div>
+            </a>
+        </div>
+
+        <div class="info-box">
+            <p><strong>🔒 Zero-Trust SSO Active</strong></p>
+            <p>All administrative interfaces are guarded by Authentik Single Sign-On and Traefik ForwardAuth. Logging in once grants seamless session tokens across services.</p>
+        </div>
+    </div>
+</body>
+</html>

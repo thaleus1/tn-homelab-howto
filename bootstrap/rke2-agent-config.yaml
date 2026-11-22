@@ -1,0 +1,4 @@
+# /etc/rancher/rke2/config.yaml for RKE2 Agent (Worker and Storage Nodes)
+
+server: "https://10.90.16.50:6443"
+token: "<SECURE_BOOTSTRAP_TOKEN>"

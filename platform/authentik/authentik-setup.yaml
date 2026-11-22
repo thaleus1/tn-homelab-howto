@@ -1,0 +1,62 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: authentik
+  namespace: authentik
+spec:
+  forwardAuth:
+    address: http://authentik-server.authentik.svc.cluster.local/outpost.goauthentik.io/auth/traefik
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-authentik-username
+      - X-authentik-groups
+      - X-authentik-email
+      - X-authentik-name
+      - X-authentik-uid
+      - X-authentik-jwt
+      - X-authentik-meta-jwks
+      - X-authentik-meta-outpost
+      - X-authentik-meta-provider
+      - X-authentik-meta-app
+      - X-authentik-meta-version
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-secrets
+  namespace: authentik
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    name: bitwarden-secretsmanager
+    kind: ClusterSecretStore
+  target:
+    name: authentik-secrets
+    creationPolicy: Owner
+  data:
+    - secretKey: AUTHENTIK_BOOTSTRAP_PASSWORD
+      remoteRef:
+        key: "authentik-bootstrap-password"
+    - secretKey: AUTHENTIK_POSTGRESQL__PASSWORD
+      remoteRef:
+        key: "authentik-postgresql-password"
+    - secretKey: AUTHENTIK_SECRET_KEY
+      remoteRef:
+        key: "authentik-secret-key"
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: authentik
+  namespace: authentik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`auth.yourdomain.com`)
+      kind: Rule
+      services:
+        - name: authentik-server
+          port: 80
+  tls:
+    secretName: wildcard-tls

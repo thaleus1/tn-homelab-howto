@@ -1,0 +1,96 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: prowlarr
+  labels:
+    name: prowlarr
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prowlarr
+  namespace: prowlarr
+  labels:
+    app: prowlarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: prowlarr
+  template:
+    metadata:
+      labels:
+        app: prowlarr
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        worker: "true"
+      containers:
+        - name: prowlarr
+          image: lscr.io/linuxserver/prowlarr:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9696
+              name: http
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /config
+              name: config
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: prowlarr-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prowlarr-web
+  namespace: prowlarr
+spec:
+  ports:
+    - name: http
+      port: 9696
+      targetPort: 9696
+  selector:
+    app: prowlarr
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prowlarr
+  namespace: prowlarr
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`prowlarr.yourdomain.com`) && PathPrefix(`/api`)
+      priority: 20
+      services:
+        - name: prowlarr-web
+          port: 9696
+    - kind: Rule
+      match: Host(`prowlarr.yourdomain.com`)
+      priority: 10
+      middlewares:
+        - name: authentik-authentik@kubernetescrd
+      services:
+        - name: prowlarr-web
+          port: 9696
+  tls:
+    secretName: wildcard-tls

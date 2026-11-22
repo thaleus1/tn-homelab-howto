@@ -1,0 +1,52 @@
+#!ipxe
+###
+### Custom iPXE Menu for Proxmox VE Automated Network Installation
+### Deployed to TrueNAS netboot.xyz (/mnt/your-pool/netboot-config/menus/custom.ipxe)
+###
+
+:custom
+clear custom_choice
+menu Proxmox VE Automated Provisioning Pipeline
+item --gap --             ---------------- Automated Installations ----------------
+item pve92_auto_sda       Proxmox VE 9.2 - Automated Install (SATA / sda)
+item pve92_auto_nvme      Proxmox VE 9.2 - Automated Install (NVMe / nvme0n1)
+item --gap --             ---------------- Interactive Installers -----------------
+item pve92_interactive    Proxmox VE 9.2 - Interactive Manual Installer
+item --gap --             ---------------- Diagnostics & Tools --------------------
+item memtest              Memtest86+
+item shell                Drop to iPXE Shell
+item return               Return to Main Menu
+choose custom_choice || goto custom_exit
+
+:pve92_auto_sda
+echo Loading Proxmox VE 9.2 Automated Installer (SATA / sda)...
+set base-url http://172.16.36.10:31011/proxmox
+kernel ${base-url}/linux26 ro ramdisk_size=16777216 rw quiet proxmox-start-auto-installer answer-url=${base-url}/answer.toml splash=silent
+initrd ${base-url}/initrd.iso.img
+boot || goto custom_exit
+
+:pve92_auto_nvme
+echo Loading Proxmox VE 9.2 Automated Installer (NVMe / nvme0n1)...
+set base-url http://172.16.36.10:31011/proxmox
+kernel ${base-url}/linux26 ro ramdisk_size=16777216 rw quiet proxmox-start-auto-installer answer-url=${base-url}/answer-nvme.toml splash=silent
+initrd ${base-url}/initrd.iso.img
+boot || goto custom_exit
+
+:pve92_interactive
+echo Loading Proxmox VE 9.2 Interactive Installer...
+set base-url http://172.16.36.10:31011/proxmox
+kernel ${base-url}/linux26 ro ramdisk_size=16777216 rw quiet splash=silent
+initrd ${base-url}/initrd.iso.img
+boot || goto custom_exit
+
+:memtest
+kernel https://boot.netboot.xyz/memtest/memtest86
+boot || goto custom_exit
+
+:shell
+echo Type 'exit' to return to menu...
+shell
+goto custom
+
+:custom_exit
+exit 0

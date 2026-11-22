@@ -1,0 +1,19 @@
+# /etc/rancher/rke2/config.yaml for RKE2 Server (Master Nodes)
+#
+# On Master 1 (first node):
+#   Set `cluster-init: true` and omit `server: ...`
+# On Master 2 & 3 (joining nodes):
+#   Omit `cluster-init: true` and include `server: https://10.90.16.50:6443`
+
+token: "<SECURE_BOOTSTRAP_TOKEN>"
+tls-san:
+  - "10.90.16.50"
+  - "10.90.16.41"
+  - "10.90.16.42"
+  - "10.90.16.43"
+  - "kube-api.yourdomain.com"
+write-kubeconfig-mode: "0644"
+cni:
+  - canal
+disable:
+  - rke2-ingress-nginx  # Traefik v3 is used instead of default Nginx

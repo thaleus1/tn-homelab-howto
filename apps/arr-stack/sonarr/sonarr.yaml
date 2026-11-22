@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sonarr
+  labels:
+    name: sonarr
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: sonarr
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      automountServiceAccountToken: false
+      nodeSelector:
+        worker: "true"
+      containers:
+        - name: sonarr
+          image: lscr.io/linuxserver/sonarr:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8989
+              name: http
+          env:
+            - name: TZ
+              value: America/New_York
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /downloads
+              name: downloads
+            - mountPath: /media/tvshows
+              name: tvshows
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sonarr-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: media-downloads-pvc
+        - name: tvshows
+          persistentVolumeClaim:
+            claimName: media-tvshows-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sonarr-web
+  namespace: sonarr
+spec:
+  ports:
+    - name: http
+      port: 8989
+      targetPort: 8989
+  selector:
+    app: sonarr
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sonarr
+  namespace: sonarr
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # 1. Direct API Access bypasses Authentik for Prowlarr / Companion Apps
+    - kind: Rule
+      match: Host(`sonarr.yourdomain.com`) && PathPrefix(`/api`)
+      priority: 20
+      services:
+        - name: sonarr-web
+          port: 8989
+    # 2. Web UI Access Protected by Authentik ForwardAuth
+    - kind: Rule
+      match: Host(`sonarr.yourdomain.com`)
+      priority: 10
+      middlewares:
+        - name: authentik-authentik@kubernetescrd
+      services:
+        - name: sonarr-web
+          port: 8989
+  tls:
+    secretName: wildcard-tls

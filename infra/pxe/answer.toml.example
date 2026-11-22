@@ -1,0 +1,32 @@
+# Proxmox VE 8/9 Automated Installation Answer File (SATA / sda)
+# Validated with proxmox-auto-install-assistant
+
+[global]
+keyboard = "en-us"
+country = "us"
+mailto = "admin@yourdomain.com"
+timezone = "America/New_York"
+# Generate via: openssl passwd -6 "YourPassword" or mkpasswd -m yescrypt "YourPassword"
+root-password-hashed = "REPLACE_WITH_HASHED_ROOT_PASSWORD"
+root-ssh-keys = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... admin@workstation"
+]
+reboot-mode = "reboot"
+
+# Dynamically sets hostname from DHCP reservation + domain
+[global.fqdn]
+source = "from-dhcp"
+domain = "yourdomain.com"
+
+[network]
+source = "from-dhcp"
+
+[disk-setup]
+filesystem = "ext4"
+disk-list = ["sda"]
+
+# First-boot hook to automatically join Proxmox cluster
+[first-boot]
+source = "from-url"
+url = "http://172.16.36.10:31011/proxmox/first-boot.sh"
+ordering = "network-online"
