@@ -88,6 +88,7 @@ Start here to explore the design or build your own version:
 | 🔐 **[Secrets Management (Bitwarden + ESO)](docs/SECRETS_MANAGEMENT.md)** | Declarative secret synchronization using External Secrets Operator. |
 | 🔒 **[SSO & Ingress Authentication](docs/AUTHENTICATION_SSO.md)** | Authentik single sign-on, Traefik ForwardAuth, and Cloudflare Tunnels. |
 | 🚨 **[Disaster Recovery Runbook](docs/DISASTER_RECOVERY.md)** | Cold-start disaster recovery guide to rebuild from scratch. |
+| ⚡ **[Power Maintenance & Cold-Start](docs/POWER_MAINTENANCE.md)** | Graceful shutdown hierarchy and orderly startup sequencing for physical power maintenance. |
 
 ---
 
