@@ -44,11 +44,11 @@ flowchart TD
         B1["1. Power & Network Infrastructure<br/>(UPS, PDUs, Switches, Gateway DHCP/VLANs)"]
         B2["2. Central Storage Server<br/>(TrueNAS jupiter -> ZFS Pools & NFS exports active)"]
         B3["3. Proxmox VE Hypervisors<br/>(10 nodes power on -> Corosync Quorum >= 6 formed)"]
-        B4["4. Order 1: Identity & Core DNS<br/>(Artemis BIND DNS, Juno DC1, Vulcan DC2)"]
+        B4["4. Order 1: Identity, Core DNS & Storage<br/>(Artemis BIND DNS, Juno DC1, Vulcan DC2, saturn TrueNAS)"]
         B5["5. Order 2: Control Plane Masters<br/>(rke2-master1..3 -> etcd quorum & kube-vip 10.90.16.50)"]
         B6["6. Order 3: Storage Nodes<br/>(rke2-longhorn1,3,4 -> Longhorn 3x replicas online)"]
         B7["7. Order 4: Compute Workers<br/>(rke2-worker1..7 -> iGPU devices advertise -> Pods attach PVCs)"]
-        B8["8. Order 5: Management & Storage Appliances<br/>(rke2-admin, winadmin, saturn-local)"]
+        B8["8. Order 5: Management Administration Bastions<br/>(rke2-admin, rke2-winadmin)"]
         B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7 --> B8
     end
 ```
@@ -227,11 +227,11 @@ When power maintenance is complete, restore power **strictly from the bottom up*
 1. Power on all 10 Proxmox VE hosts (`pve01..08, 11, 12`).
 2. Corosync cluster will automatically form quorum ($\ge 6$ votes).
 3. **Automated VM Sequencing**: Because startup orders are configured in Proxmox, the hypervisors will automatically boot all active VMs in strict dependency order:
-   * **Order 1 (up 30s)**: Identity & Core DNS (`Artemis` BIND DNS, `Juno` AD DC1, `Vulcan` AD DC2) boot first so directory authentication and network DNS resolution are online.
+   * **Order 1 (up 30s)**: Identity, Core DNS & Media Storage (`Artemis` BIND DNS, `Juno` AD DC1, `Vulcan` AD DC2, `saturn-local` TrueNAS Storage) boot first so directory authentication, network DNS resolution, and Whisparr/Emby media shares are online.
    * **Order 2 (up 60s)**: RKE2 Masters (`rke2-master1..3`) boot, initialize etcd quorum, and bind API VIP `10.90.16.50`.
    * **Order 3 (up 60s)**: Storage Nodes (`rke2-longhorn1,3,4`) boot, mount local NVMe storage, and start Longhorn volume replica engines.
    * **Order 4 (up 30s)**: Compute Workers (`rke2-worker1..7`) boot, join Kubernetes, advertise QuickSync GPUs, and begin mounting Longhorn & NFS volumes.
-   * **Order 5 (up  0s)**: Management bastions and storage appliances (`rke2-admin`, `rke2-winadmin`, `saturn-local`) power on.
+   * **Order 5 (up  0s)**: Management bastions (`rke2-admin`, `rke2-winadmin`) power on.
 
 ---
 
